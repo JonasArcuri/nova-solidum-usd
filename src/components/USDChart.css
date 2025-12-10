@@ -13,21 +13,24 @@
 }
 
 .usd-header {
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
   border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .usd-title-section {
-  margin-bottom: 1.5rem;
+  flex: 1;
 }
 
 .usd-main-title {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 600;
   color: var(--text-primary);
   font-family: 'Georgia', 'Times New Roman', serif;
-  margin-bottom: 0.5rem;
+  margin: 0;
 }
 
 .usd-pair-info {
@@ -56,11 +59,12 @@
 .usd-rate-section {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.25rem;
+  align-items: flex-end;
 }
 
 .usd-current-rate {
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 700;
   color: var(--text-primary);
   font-family: 'Georgia', 'Times New Roman', serif;
@@ -90,51 +94,8 @@
   color: var(--text-muted);
 }
 
-.usd-nav-tabs {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 2rem;
-  border-bottom: 1px solid var(--border-color);
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.usd-tab {
-  background: transparent;
-  border: none;
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.usd-tab:hover {
-  color: var(--text-primary);
-}
-
-.usd-tab.active {
-  color: var(--text-secondary);
-  border-bottom-color: var(--text-secondary);
-  font-weight: 600;
-}
-
 .usd-chart-section {
-  margin-bottom: 2rem;
-}
-
-.usd-chart-header {
-  margin-bottom: 1rem;
-}
-
-.usd-chart-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  font-family: 'Georgia', 'Times New Roman', serif;
+  margin-bottom: 1.5rem;
 }
 
 .usd-chart-wrapper {
@@ -143,17 +104,16 @@
 }
 
 .usd-performance-section {
-  margin-top: 2rem;
-  padding-top: 2rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
   border-top: 1px solid var(--border-color);
 }
 
 .usd-performance-title {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
-  font-family: 'Georgia', 'Times New Roman', serif;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .usd-performance-grid {

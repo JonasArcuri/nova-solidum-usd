@@ -12,7 +12,7 @@
 }
 
 .header {
-  padding: 2rem 0;
+  padding: 1.5rem 0;
   border-bottom: 1px solid var(--border-color);
   background: var(--bg-white);
 }
@@ -26,54 +26,87 @@
 }
 
 .logo-image {
-  max-height: 80px;
+  max-height: 120px;
   width: auto;
   object-fit: contain;
 }
 
-.header-text {
-  text-align: center;
-  flex: 1;
-  min-width: 300px;
-}
 
 .logo {
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 700;
   color: var(--text-primary);
   font-family: 'Georgia', 'Times New Roman', serif;
-  margin-bottom: 0.5rem;
   letter-spacing: -0.02em;
-}
-
-.tagline {
-  color: var(--text-primary);
-  font-size: 1rem;
-  font-weight: 400;
-  line-height: 1.6;
-  max-width: 600px;
-  margin: 0 auto;
 }
 
 .main {
   flex: 1;
-  padding: 3rem 0;
+  padding: 2rem 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.footer {
-  padding: 2rem 0;
-  text-align: center;
-  border-top: 1px solid var(--border-color);
-  background: var(--bg-white);
+section {
+  scroll-margin-top: 100px;
 }
 
-.footer p {
-  color: var(--text-muted);
+.footer {
+  padding: 3rem 0 2rem;
+  text-align: center;
+  background: var(--primary-color);
+  color: #ffffff;
+  margin-top: 3rem;
+}
+
+.footer-links {
+  margin-bottom: 2rem;
+}
+
+.footer-links p {
+  color: #ffffff;
   font-size: 0.875rem;
-  margin: 0.25rem 0;
+  margin: 0;
+}
+
+.footer-links a {
+  color: #ffffff;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.footer-links a:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.footer-disclaimer {
+  max-width: 900px;
+  margin: 0 auto 2rem;
+  padding: 0 1rem;
+}
+
+.footer-disclaimer p {
+  color: #ffffff;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.footer-disclaimer strong {
+  font-weight: 600;
+}
+
+.footer-logo {
+  margin-top: 2rem;
+}
+
+.footer-logo-image {
+  max-height: 100px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 12px;
 }
 
 .update-info {
@@ -88,19 +121,28 @@
   }
 
   .logo-image {
-    max-height: 60px;
+    max-height: 80px;
   }
 
   .logo {
     font-size: 2rem;
   }
 
-  .tagline {
-    font-size: 0.875rem;
-  }
-
   .main {
     padding: 2rem 0;
+  }
+
+  .footer {
+    padding: 2rem 0 1.5rem;
+  }
+
+  .footer-links p {
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+
+  .footer-disclaimer p {
+    font-size: 0.7rem;
   }
 }
 

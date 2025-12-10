@@ -15,7 +15,6 @@ const USDTConverter = () => {
   const [rates, setRates] = useState<ExchangeRates | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [spread, setSpread] = useState<number>(DEFAULT_SPREAD)
 
   const fetchRates = async () => {
@@ -46,7 +45,6 @@ const USDTConverter = () => {
         spread
       })
       
-      setLastUpdate(new Date())
       setLoading(false)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao buscar dados')
@@ -63,7 +61,7 @@ const USDTConverter = () => {
     return () => clearInterval(interval)
   }, [])
 
-  const formatCurrency = (value: number, decimals: number = 5): string => {
+  const formatCurrency = (value: number, decimals: number = 4): string => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
@@ -114,18 +112,16 @@ const USDTConverter = () => {
   return (
     <div className="converter-container">
       <div className="converter-card">
-        <h2 className="converter-title">Conversor USDT → BRL com spread</h2>
-        
         <div className="rates-grid">
           <div className="rate-item">
-            <label>Cotação atual (USDT → BRL)</label>
+            <label>USDT → BRL</label>
             <div className="rate-value">
-              {rates ? formatCurrency(rates.usdToBrl, 5) : '--'}
+              {rates ? formatCurrency(rates.usdToBrl, 4) : '--'}
             </div>
           </div>
 
           <div className="rate-item">
-            <label>Spread (%)</label>
+            <label>Spread</label>
             <div className="spread-input-container">
               <input
                 type="number"
@@ -145,17 +141,11 @@ const USDTConverter = () => {
         </div>
 
         <div className="result-section">
-          <label>USDT com spread</label>
+          <label>Total</label>
           <div className="result-value">
-            {rates ? formatCurrency(rates.usdtWithSpread, 5) : 'R$ 0,00000'}
+            {rates ? formatCurrency(rates.usdtWithSpread, 4) : 'R$ 0,0000'}
           </div>
         </div>
-
-        {lastUpdate && (
-          <div className="last-update">
-            Última atualização: {lastUpdate.toLocaleTimeString('pt-BR')}
-          </div>
-        )}
       </div>
     </div>
   )

@@ -24,7 +24,6 @@ const USDChart = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('1 dia')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
 
   const fetchUSDData = async () => {
     try {
@@ -47,7 +46,6 @@ const USDChart = () => {
       setCurrentRate(rate)
       setChange24h(change)
       setChange24hPercent(changePercent)
-      setLastUpdate(new Date())
 
       // Calcular métricas de performance
       const metrics: PerformanceMetrics[] = [
@@ -122,7 +120,7 @@ const USDChart = () => {
       
       historicalData.push({
         date: dateStr,
-        value: parseFloat(historicalRate.toFixed(5))
+        value: parseFloat(historicalRate.toFixed(4))
       })
     }
     
@@ -144,7 +142,7 @@ const USDChart = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPeriod, currentRate])
 
-  const formatCurrency = (value: number, decimals: number = 5): string => {
+  const formatCurrency = (value: number, decimals: number = 4): string => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'decimal',
       minimumFractionDigits: decimals,
@@ -184,36 +182,20 @@ const USDChart = () => {
       <div className="usd-chart-card">
         <div className="usd-header">
           <div className="usd-title-section">
-            <h1 className="usd-main-title">Dólar estadunidense / Real brasileiro</h1>
-            <div className="usd-pair-info">
-              <span className="usd-pair">USDBRL</span>
-              <span className="usd-status-dot"></span>
-            </div>
+            <h1 className="usd-main-title">USD / BRL</h1>
           </div>
           
           <div className="usd-rate-section">
             <div className="usd-current-rate">
-              {formatCurrency(currentRate, 5)} <span className="usd-currency">BRL</span>
+              {formatCurrency(currentRate, 4)} <span className="usd-currency">BRL</span>
             </div>
             <div className={`usd-change ${isPositive ? 'positive' : 'negative'}`}>
-              {isPositive ? '+' : ''}{formatCurrency(change24h, 5)} {isPositive ? '+' : ''}{change24hPercent.toFixed(2)}%
+              {isPositive ? '+' : ''}{change24hPercent.toFixed(2)}%
             </div>
-            {lastUpdate && (
-              <div className="usd-timestamp">
-                A partir de hoje às {lastUpdate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} GMT-3
-              </div>
-            )}
           </div>
-        </div>
-
-        <div className="usd-nav-tabs">
-          <button className="usd-tab active">Resumo</button>
         </div>
 
         <div className="usd-chart-section">
-          <div className="usd-chart-header">
-            <h3 className="usd-chart-title">Gráfico</h3>
-          </div>
           
           <div className="usd-chart-wrapper">
             <ResponsiveContainer width="100%" height={500}>
@@ -234,7 +216,7 @@ const USDChart = () => {
                   stroke="#6b7280"
                   style={{ fontSize: '12px' }}
                   domain={['auto', 'auto']}
-                  tickFormatter={(value) => formatCurrency(value, 5)}
+                  tickFormatter={(value) => formatCurrency(value, 4)}
                 />
                 <Tooltip 
                   formatter={formatTooltip}
