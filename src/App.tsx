@@ -1,6 +1,6 @@
 import './App.css'
 import USDTConverter from './components/USDTConverter'
-import MarketChart from './components/MarketChart'
+import USDChart from './components/USDChart'
 
 function App() {
   return (
@@ -23,7 +23,7 @@ function App() {
       
       <main className="main">
         <div className="container">
-          <MarketChart />
+          <USDChart />
           <USDTConverter />
         </div>
       </main>
