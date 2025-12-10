@@ -1,0 +1,38 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Cores baseadas na identidade visual Nova Solidum */
+  --primary-color: #1a1a2e; /* Azul escuro para textos principais */
+  --secondary-color: #16213e;
+  --accent-red: #dc2626; /* Vermelho vibrante para destaque */
+  --accent-red-hover: #b91c1c;
+  --text-primary: #1a1a2e; /* Azul escuro (quase preto) */
+  --text-secondary: #dc2626; /* Vermelho para destaques */
+  --text-muted: #6b7280; /* Cinza para textos secundários */
+  --bg-white: #ffffff;
+  --card-bg: #ffffff;
+  --border-color: #e5e7eb; /* Borda sutil cinza claro */
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--bg-white);
+  min-height: 100vh;
+  color: var(--text-primary);
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
