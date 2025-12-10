@@ -23,8 +23,8 @@ function App() {
       
       <main className="main">
         <div className="container">
-          <USDChart />
           <USDTConverter />
+          <USDChart />
         </div>
       </main>
 

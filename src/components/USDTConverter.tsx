@@ -63,7 +63,7 @@ const USDTConverter = () => {
     return () => clearInterval(interval)
   }, [])
 
-  const formatCurrency = (value: number, decimals: number = 2): string => {
+  const formatCurrency = (value: number, decimals: number = 5): string => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
@@ -120,7 +120,7 @@ const USDTConverter = () => {
           <div className="rate-item">
             <label>Cotação atual (USDT → BRL)</label>
             <div className="rate-value">
-              {rates ? formatCurrency(rates.usdToBrl, 2) : '--'}
+              {rates ? formatCurrency(rates.usdToBrl, 5) : '--'}
             </div>
           </div>
 
@@ -147,7 +147,7 @@ const USDTConverter = () => {
         <div className="result-section">
           <label>USDT com spread</label>
           <div className="result-value">
-            {rates ? formatCurrency(rates.usdtWithSpread, 2) : 'R$ 0,00'}
+            {rates ? formatCurrency(rates.usdtWithSpread, 5) : 'R$ 0,00000'}
           </div>
         </div>
 

@@ -122,7 +122,7 @@ const USDChart = () => {
       
       historicalData.push({
         date: dateStr,
-        value: parseFloat(historicalRate.toFixed(4))
+        value: parseFloat(historicalRate.toFixed(5))
       })
     }
     
@@ -144,7 +144,7 @@ const USDChart = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPeriod, currentRate])
 
-  const formatCurrency = (value: number, decimals: number = 4): string => {
+  const formatCurrency = (value: number, decimals: number = 5): string => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'decimal',
       minimumFractionDigits: decimals,
@@ -193,10 +193,10 @@ const USDChart = () => {
           
           <div className="usd-rate-section">
             <div className="usd-current-rate">
-              {formatCurrency(currentRate, 4)} <span className="usd-currency">BRL</span>
+              {formatCurrency(currentRate, 5)} <span className="usd-currency">BRL</span>
             </div>
             <div className={`usd-change ${isPositive ? 'positive' : 'negative'}`}>
-              {isPositive ? '+' : ''}{formatCurrency(change24h, 4)} {isPositive ? '+' : ''}{change24hPercent.toFixed(2)}%
+              {isPositive ? '+' : ''}{formatCurrency(change24h, 5)} {isPositive ? '+' : ''}{change24hPercent.toFixed(2)}%
             </div>
             {lastUpdate && (
               <div className="usd-timestamp">
@@ -234,7 +234,7 @@ const USDChart = () => {
                   stroke="#6b7280"
                   style={{ fontSize: '12px' }}
                   domain={['auto', 'auto']}
-                  tickFormatter={(value) => formatCurrency(value, 2)}
+                  tickFormatter={(value) => formatCurrency(value, 5)}
                 />
                 <Tooltip 
                   formatter={formatTooltip}
