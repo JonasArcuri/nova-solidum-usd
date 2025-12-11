@@ -12,9 +12,10 @@
 }
 
 .header {
-  padding: 1.5rem 0;
-  border-bottom: 1px solid var(--border-color);
+  padding: 2rem 0;
+  border-bottom: 1px solid var(--border-light);
   background: var(--bg-white);
+  box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.05);
 }
 
 .header-content {
@@ -23,6 +24,7 @@
   justify-content: center;
   gap: 2rem;
   flex-wrap: wrap;
+  transition: all 0.3s ease;
 }
 
 .logo-image {
@@ -42,10 +44,11 @@
 
 .main {
   flex: 1;
-  padding: 2rem 0;
+  padding: 3rem 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: transparent;
 }
 
 section {

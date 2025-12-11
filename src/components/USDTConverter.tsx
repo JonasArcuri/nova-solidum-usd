@@ -111,17 +111,29 @@ const USDTConverter = () => {
 
   return (
     <div className="converter-container">
+      <div className="converter-intro">
+        <h2 className="converter-title">Cotação USDT em Tempo Real</h2>
+        <p className="converter-subtitle">A ponte entre o real e o digital</p>
+      </div>
+      
       <div className="converter-card">
         <div className="rates-grid">
           <div className="rate-item">
-            <label>USDT → BRL</label>
+            <div className="rate-header">
+              <span className="rate-icon">₿</span>
+              <label>USDT → BRL</label>
+            </div>
             <div className="rate-value">
               {rates ? formatCurrency(rates.usdToBrl, 4) : '--'}
             </div>
+            <div className="rate-info">Cotação atual do mercado</div>
           </div>
 
           <div className="rate-item">
-            <label>Spread</label>
+            <div className="rate-header">
+              <span className="rate-icon">%</span>
+              <label>Spread</label>
+            </div>
             <div className="spread-input-container">
               <input
                 type="number"
@@ -137,11 +149,15 @@ const USDTConverter = () => {
               />
               <span className="spread-suffix">%</span>
             </div>
+            <div className="rate-info">Taxa de conversão</div>
           </div>
         </div>
 
         <div className="result-section">
-          <label>Total</label>
+          <div className="result-header">
+            <label>Valor Final</label>
+            <span className="result-badge">Com spread aplicado</span>
+          </div>
           <div className="result-value">
             {rates ? formatCurrency(rates.usdtWithSpread, 4) : 'R$ 0,0000'}
           </div>

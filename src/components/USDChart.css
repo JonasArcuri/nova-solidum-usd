@@ -6,16 +6,34 @@
 
 .usd-chart-card {
   background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: var(--shadow);
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  padding: 2.5rem;
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.usd-chart-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #10b981 0%, rgba(16, 185, 129, 0.3) 100%);
+}
+
+.usd-chart-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
 }
 
 .usd-header {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--border-light);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -64,10 +82,11 @@
 }
 
 .usd-current-rate {
-  font-size: 2rem;
+  font-size: 2.25rem;
   font-weight: 700;
   color: var(--text-primary);
   font-family: 'Georgia', 'Times New Roman', serif;
+  letter-spacing: -0.02em;
 }
 
 .usd-currency {
@@ -77,16 +96,22 @@
 }
 
 .usd-change {
-  font-size: 1rem;
+  font-size: 1.125rem;
   font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  display: inline-block;
+  width: fit-content;
 }
 
 .usd-change.positive {
   color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
 }
 
 .usd-change.negative {
   color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .usd-timestamp {
@@ -126,25 +151,49 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding: 1rem;
-  background: rgba(0, 0, 0, 0.02);
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
+  padding: 1.25rem;
+  background: var(--bg-subtle);
+  border-radius: 12px;
+  border: 2px solid var(--border-light);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   text-align: left;
+  position: relative;
+  overflow: hidden;
+}
+
+.usd-performance-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--text-secondary);
+  transform: scaleY(0);
+  transition: transform 0.3s ease;
 }
 
 .usd-performance-item:hover {
-  background: rgba(0, 0, 0, 0.04);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: #f3f4f6;
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-color);
+}
+
+.usd-performance-item:hover::before {
+  transform: scaleY(1);
 }
 
 .usd-performance-item.selected {
-  background: rgba(220, 38, 38, 0.05);
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.08) 0%, rgba(220, 38, 38, 0.03) 100%);
   border-color: var(--text-secondary);
   border-width: 2px;
+  box-shadow: var(--shadow-md);
+}
+
+.usd-performance-item.selected::before {
+  transform: scaleY(1);
 }
 
 .usd-performance-period {
