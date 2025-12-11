@@ -130,7 +130,7 @@ const USDChart = () => {
   useEffect(() => {
     fetchUSDData()
     
-    const interval = setInterval(fetchUSDData, 60000) // Atualizar a cada 1 minuto
+    const interval = setInterval(fetchUSDData, 3000) // Atualizar a cada 3 segundos - atualização em tempo real
     
     return () => clearInterval(interval)
   }, [])

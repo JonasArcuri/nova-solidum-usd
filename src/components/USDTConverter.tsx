@@ -9,30 +9,41 @@ interface ExchangeRates {
 }
 
 const DEFAULT_SPREAD = 0.70 // 0.70% de spread padrão
-const UPDATE_INTERVAL = 15000 // 15 segundos
+const UPDATE_INTERVAL = 3000 // 3 segundos - atualização em tempo real
 
 const USDTConverter = () => {
   const [rates, setRates] = useState<ExchangeRates | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [spread, setSpread] = useState<number>(DEFAULT_SPREAD)
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
 
   const fetchRates = async () => {
     try {
       setError(null)
       
-      // Buscar preço do USDT em USD e BRL em uma única chamada (CoinGecko)
-      const response = await fetch(
-        'https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=usd,brl'
+      // Buscar cotação USD/BRL usando API de câmbio
+      const usdBrlResponse = await fetch(
+        'https://economia.awesomeapi.com.br/json/last/USD-BRL'
       )
       
-      if (!response.ok) {
-        throw new Error('Erro ao buscar cotação')
+      if (!usdBrlResponse.ok) {
+        throw new Error('Erro ao buscar cotação USD/BRL')
       }
       
-      const data = await response.json()
-      const usdtPrice = data.tether.usd
-      const usdToBrl = data.tether.brl
+      const usdBrlData = await usdBrlResponse.json()
+      const usdToBrl = parseFloat(usdBrlData.USDBRL.bid)
+
+      // Buscar preço do USDT em USD (CoinGecko) para referência
+      const usdtResponse = await fetch(
+        'https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=usd'
+      )
+      
+      let usdtPrice = 1.0
+      if (usdtResponse.ok) {
+        const usdtData = await usdtResponse.json()
+        usdtPrice = usdtData.tether.usd
+      }
 
       // Calcular spread com valor do estado
       const spreadMultiplier = 1 + (spread / 100)
@@ -45,6 +56,7 @@ const USDTConverter = () => {
         spread
       })
       
+      setLastUpdate(new Date())
       setLoading(false)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao buscar dados')
@@ -168,6 +180,12 @@ const USDTConverter = () => {
             </div>
           </div>
         </div>
+
+        {lastUpdate && (
+          <div className="last-update">
+            Última atualização: {lastUpdate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+          </div>
+        )}
       </div>
     </div>
   )
