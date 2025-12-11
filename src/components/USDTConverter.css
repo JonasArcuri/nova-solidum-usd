@@ -193,13 +193,27 @@
   font-weight: 600;
 }
 
+.result-value-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.result-icon-image {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 .result-value {
   font-size: 2.75rem;
   font-weight: 700;
   color: var(--text-secondary);
   word-break: break-word;
-  position: relative;
-  z-index: 1;
   letter-spacing: -0.02em;
 }
 
@@ -294,6 +308,11 @@
     gap: 0.5rem;
   }
 
+  .result-icon-image {
+    width: 40px;
+    height: 40px;
+  }
+
   .result-value {
     font-size: 2rem;
   }
@@ -302,6 +321,11 @@
 @media (max-width: 480px) {
   .converter-card {
     padding: 1.25rem;
+  }
+
+  .result-icon-image {
+    width: 36px;
+    height: 36px;
   }
 
   .result-value {

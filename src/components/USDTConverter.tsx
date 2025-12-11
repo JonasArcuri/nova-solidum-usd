@@ -120,12 +120,7 @@ const USDTConverter = () => {
         <div className="rates-grid">
           <div className="rate-item">
             <div className="rate-header">
-              <img 
-                src="/imgs/Thether-coin.png" 
-                alt="USDT" 
-                className="rate-icon-image"
-              />
-              <label>USDT → BRL</label>
+              <label>Cotação Dólar/Real</label>
             </div>
             <div className="rate-value">
               {rates ? formatCurrency(rates.usdToBrl, 4) : '--'}
@@ -162,8 +157,15 @@ const USDTConverter = () => {
             <label>Valor Final</label>
             <span className="result-badge">Com spread aplicado</span>
           </div>
-          <div className="result-value">
-            {rates ? formatCurrency(rates.usdtWithSpread, 4) : 'R$ 0,0000'}
+          <div className="result-value-container">
+            <img 
+              src="/imgs/Thether-coin.png" 
+              alt="USDT" 
+              className="result-icon-image"
+            />
+            <div className="result-value">
+              {rates ? formatCurrency(rates.usdtWithSpread, 4) : 'R$ 0,0000'}
+            </div>
           </div>
         </div>
       </div>
