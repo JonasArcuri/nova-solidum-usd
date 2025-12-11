@@ -18,6 +18,7 @@ type PeriodType = '1 dia' | '5 dias' | '1 mês' | '6 meses' | 'Ano até hoje' | 
 const USDChart = () => {
   const [currentRate, setCurrentRate] = useState<number>(0)
   const [previousRate, setPreviousRate] = useState<number>(0)
+  const [previousClose, setPreviousClose] = useState<number>(0)
   const [isRising, setIsRising] = useState<boolean>(true)
   const [change24h, setChange24h] = useState<number>(0)
   const [change24hPercent, setChange24hPercent] = useState<number>(0)
@@ -26,6 +27,7 @@ const USDChart = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('1 dia')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null)
 
   const fetchUSDData = async () => {
     try {
@@ -51,10 +53,15 @@ const USDChart = () => {
         setIsRising(isRisingNow)
       }
       
+      // Calcular fechamento anterior (ask é o valor de compra, usado como referência)
+      const prevClose = parseFloat(data.USDBRL.ask)
+      
       setPreviousRate(rate)
+      setPreviousClose(prevClose)
       setCurrentRate(rate)
       setChange24h(change)
       setChange24hPercent(changePercent)
+      setLastUpdateTime(new Date())
 
       // Calcular métricas de performance
       const metrics: PerformanceMetrics[] = [
@@ -107,38 +114,59 @@ const USDChart = () => {
         break
     }
     
-    const dataPoints = Math.min(days, 100) // Limitar a 100 pontos para performance
-    const step = Math.max(1, Math.floor(days / dataPoints))
-    
-    for (let i = days; i >= 0; i -= step) {
-      const date = new Date()
-      date.setDate(date.getDate() - i)
+    if (days === 1) {
+      // Para 1 dia, gerar dados por hora/minuto (formato TradingView)
+      const now = new Date()
+      const startOfDay = new Date(now)
+      startOfDay.setHours(9, 0, 0, 0) // Começar às 9h
       
-      let dateStr = ''
-      if (days === 1) {
-        // Para 1 dia, mostrar data e horário
-        dateStr = date.toLocaleString('pt-BR', { 
-          day: '2-digit', 
-          month: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
+      // Gerar pontos a cada 15 minutos
+      for (let i = 0; i <= 20; i++) {
+        const date = new Date(startOfDay)
+        date.setMinutes(date.getMinutes() + (i * 15))
+        
+        if (date > now) break
+        
+        const hours = date.getHours().toString().padStart(2, '0')
+        const minutes = date.getMinutes().toString().padStart(2, '0')
+        const dateStr = `${hours}:${minutes}`
+        
+        // Variação mais suave para dados intradiários
+        const timeProgress = i / 20
+        const variation = (Math.random() - 0.5) * 0.02 * (1 - timeProgress * 0.5)
+        const historicalRate = baseRate * (1 + variation)
+        
+        historicalData.push({
+          date: dateStr,
+          value: parseFloat(historicalRate.toFixed(4))
         })
-      } else if (days <= 30) {
-        dateStr = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
-      } else if (days <= 365) {
-        dateStr = date.toLocaleDateString('pt-BR', { month: '2-digit', year: '2-digit' })
-      } else {
-        dateStr = date.toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' })
       }
+    } else {
+      const dataPoints = Math.min(days, 100) // Limitar a 100 pontos para performance
+      const step = Math.max(1, Math.floor(days / dataPoints))
       
-      // Simular variação histórica baseada na distância temporal
-      const variation = (Math.random() - 0.5) * 0.15 * (i / days) // Variação maior no passado
-      const historicalRate = baseRate * (1 + variation)
-      
-      historicalData.push({
-        date: dateStr,
-        value: parseFloat(historicalRate.toFixed(4))
-      })
+      for (let i = days; i >= 0; i -= step) {
+        const date = new Date()
+        date.setDate(date.getDate() - i)
+        
+        let dateStr = ''
+        if (days <= 30) {
+          dateStr = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+        } else if (days <= 365) {
+          dateStr = date.toLocaleDateString('pt-BR', { month: '2-digit', year: '2-digit' })
+        } else {
+          dateStr = date.toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' })
+        }
+        
+        // Simular variação histórica baseada na distância temporal
+        const variation = (Math.random() - 0.5) * 0.15 * (i / days) // Variação maior no passado
+        const historicalRate = baseRate * (1 + variation)
+        
+        historicalData.push({
+          date: dateStr,
+          value: parseFloat(historicalRate.toFixed(4))
+        })
+      }
     }
     
     setChartData(historicalData)
@@ -169,8 +197,31 @@ const USDChart = () => {
     }).format(value)
   }
 
-  const formatTooltip = (value: number) => {
-    return `${formatCurrency(value)} BRL`
+  const formatTooltip = (value: number, payload: any) => {
+    if (!payload || !payload[0]) return `${formatCurrency(value)} BRL`
+    
+    const data = payload[0].payload
+    
+    // Tentar extrair data do payload ou usar data atual
+    let dateStr = data?.date || ''
+    let fullDateStr = ''
+    
+    if (selectedPeriod === '1 dia') {
+      // Para 1 dia, mostrar data completa no tooltip
+      const now = new Date()
+      fullDateStr = now.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'America/Sao_Paulo'
+      })
+    } else {
+      fullDateStr = dateStr
+    }
+    
+    return `${formatCurrency(value)} BRL\n${fullDateStr}`
   }
 
   if (loading && !currentRate) {
@@ -201,7 +252,19 @@ const USDChart = () => {
       <div className="usd-chart-card">
         <div className="usd-header">
           <div className="usd-title-section">
-            <h1 className="usd-main-title">USD / BRL</h1>
+            <h1 className="usd-main-title">Dólar Americano / Real Brasileiro</h1>
+            <div className="usd-subtitle">
+              <span className="usd-pair">USDBRL</span>
+              {lastUpdateTime && (
+                <span className="usd-timestamp">
+                  A partir de hoje em {lastUpdateTime.toLocaleTimeString('pt-BR', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    timeZone: 'America/Sao_Paulo'
+                  })} GMT-3
+                </span>
+              )}
+            </div>
           </div>
           
           <div className="usd-rate-section">
@@ -209,8 +272,13 @@ const USDChart = () => {
               {formatCurrency(currentRate, 4)} <span className="usd-currency">BRL</span>
             </div>
             <div className={`usd-change ${isPositive ? 'positive' : 'negative'}`}>
-              {isPositive ? '+' : ''}{change24hPercent.toFixed(2)}%
+              {isPositive ? '+' : ''}{formatCurrency(Math.abs(change24h), 4)} {isPositive ? '+' : ''}{change24hPercent.toFixed(2)}%
             </div>
+            {previousClose > 0 && (
+              <div className="usd-previous-close">
+                Fechamento anterior: {formatCurrency(previousClose, 4)}
+              </div>
+            )}
           </div>
         </div>
 
@@ -218,7 +286,7 @@ const USDChart = () => {
           
           <div className="usd-chart-wrapper">
             <ResponsiveContainer width="100%" height={500}>
-              <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <AreaChart data={chartData} margin={{ top: 20, right: 20, left: 10, bottom: 20 }}>
                 <defs>
                   <linearGradient id="colorUsd" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
@@ -242,12 +310,19 @@ const USDChart = () => {
                   tickFormatter={(value) => formatCurrency(value, 4)}
                 />
                 <Tooltip 
-                  formatter={formatTooltip}
+                  formatter={(value: any, _name: any, props: any) => formatTooltip(value, props)}
+                  labelFormatter={(label) => {
+                    if (selectedPeriod === '1 dia') {
+                      return `Horário: ${label}`
+                    }
+                    return `Data: ${label}`
+                  }}
                   contentStyle={{
                     backgroundColor: '#ffffff',
                     border: '1px solid #e5e7eb',
                     borderRadius: '8px',
-                    padding: '8px 12px'
+                    padding: '8px 12px',
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
                   }}
                 />
                 {/* Linha verde - sempre visível */}
