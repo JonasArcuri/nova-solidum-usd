@@ -120,7 +120,11 @@ const USDTConverter = () => {
         <div className="rates-grid">
           <div className="rate-item">
             <div className="rate-header">
-              <span className="rate-icon">₿</span>
+              <img 
+                src="/imgs/Thether-coin.png" 
+                alt="USDT" 
+                className="rate-icon-image"
+              />
               <label>USDT → BRL</label>
             </div>
             <div className="rate-value">

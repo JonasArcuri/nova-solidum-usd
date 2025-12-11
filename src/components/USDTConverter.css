@@ -35,39 +35,6 @@
   overflow: hidden;
 }
 
-.converter-badges {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-bottom: 2rem;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: var(--bg-subtle);
-  border-radius: 20px;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--text-primary);
-  border: 1px solid var(--border-light);
-  transition: all 0.2s ease;
-}
-
-.badge:hover {
-  background: #f3f4f6;
-  border-color: var(--border-color);
-}
-
-.badge-icon {
-  font-size: 1rem;
-}
-
 .converter-card::before {
   content: '';
   position: absolute;
@@ -114,9 +81,11 @@
   gap: 0.5rem;
 }
 
-.rate-icon {
-  font-size: 1.25rem;
-  font-weight: 600;
+.rate-icon-image {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 50%;
 }
 
 .rate-item label {
