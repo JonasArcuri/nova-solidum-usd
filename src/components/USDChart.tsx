@@ -17,6 +17,8 @@ type PeriodType = '1 dia' | '5 dias' | '1 mês' | '6 meses' | 'Ano até hoje' | 
 
 const USDChart = () => {
   const [currentRate, setCurrentRate] = useState<number>(0)
+  const [previousRate, setPreviousRate] = useState<number>(0)
+  const [isRising, setIsRising] = useState<boolean>(true)
   const [change24h, setChange24h] = useState<number>(0)
   const [change24hPercent, setChange24hPercent] = useState<number>(0)
   const [chartData, setChartData] = useState<ChartData[]>([])
@@ -43,6 +45,13 @@ const USDChart = () => {
       const change = parseFloat(data.USDBRL.bid) - parseFloat(data.USDBRL.ask)
       const changePercent = ((change / parseFloat(data.USDBRL.ask)) * 100)
       
+      // Detectar se está subindo ou descendo
+      if (previousRate > 0) {
+        const isRisingNow = rate >= previousRate
+        setIsRising(isRisingNow)
+      }
+      
+      setPreviousRate(rate)
       setCurrentRate(rate)
       setChange24h(change)
       setChange24hPercent(changePercent)
@@ -106,7 +115,15 @@ const USDChart = () => {
       date.setDate(date.getDate() - i)
       
       let dateStr = ''
-      if (days <= 30) {
+      if (days === 1) {
+        // Para 1 dia, mostrar data e horário
+        dateStr = date.toLocaleString('pt-BR', { 
+          day: '2-digit', 
+          month: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+      } else if (days <= 30) {
         dateStr = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
       } else if (days <= 365) {
         dateStr = date.toLocaleDateString('pt-BR', { month: '2-digit', year: '2-digit' })
@@ -130,10 +147,12 @@ const USDChart = () => {
   useEffect(() => {
     fetchUSDData()
     
-    const interval = setInterval(fetchUSDData, 3000) // Atualizar a cada 3 segundos - atualização em tempo real
+    // Intervalo dinâmico: 3s para subida, 10s para descida
+    const intervalTime = isRising ? 3000 : 10000
+    const interval = setInterval(fetchUSDData, intervalTime)
     
     return () => clearInterval(interval)
-  }, [])
+  }, [isRising])
 
   useEffect(() => {
     if (currentRate > 0) {
@@ -205,6 +224,10 @@ const USDChart = () => {
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
                     <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                   </linearGradient>
+                  <linearGradient id="colorUsdDown" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                  </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.3} />
                 <XAxis 
@@ -227,14 +250,27 @@ const USDChart = () => {
                     padding: '8px 12px'
                   }}
                 />
+                {/* Linha verde - sempre visível */}
                 <Area 
                   type="monotone" 
                   dataKey="value" 
                   stroke="#10b981" 
                   strokeWidth={2}
-                  fillOpacity={1} 
-                  fill="url(#colorUsd)" 
+                  fillOpacity={isRising ? 1 : 0}
+                  fill={isRising ? "url(#colorUsd)" : "none"}
+                  strokeDasharray={!isRising ? "5 5" : "0"}
                 />
+                {/* Linha vermelha - visível quando o dólar desce */}
+                {!isRising && (
+                  <Area 
+                    type="monotone" 
+                    dataKey="value" 
+                    stroke="#ef4444" 
+                    strokeWidth={2}
+                    fillOpacity={1} 
+                    fill="url(#colorUsdDown)"
+                  />
+                )}
               </AreaChart>
             </ResponsiveContainer>
           </div>

@@ -9,10 +9,11 @@ interface ExchangeRates {
 }
 
 const DEFAULT_SPREAD = 0.70 // 0.70% de spread padrão
-const UPDATE_INTERVAL = 3000 // 3 segundos - atualização em tempo real
 
 const USDTConverter = () => {
   const [rates, setRates] = useState<ExchangeRates | null>(null)
+  const [previousRate, setPreviousRate] = useState<number>(0)
+  const [isRising, setIsRising] = useState<boolean>(true)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [spread, setSpread] = useState<number>(DEFAULT_SPREAD)
@@ -33,6 +34,13 @@ const USDTConverter = () => {
       
       const usdBrlData = await usdBrlResponse.json()
       const usdToBrl = parseFloat(usdBrlData.USDBRL.bid)
+
+      // Detectar se está subindo ou descendo
+      if (previousRate > 0) {
+        const isRisingNow = usdToBrl >= previousRate
+        setIsRising(isRisingNow)
+      }
+      setPreviousRate(usdToBrl)
 
       // Buscar preço do USDT em USD (CoinGecko) para referência
       const usdtResponse = await fetch(
@@ -64,14 +72,16 @@ const USDTConverter = () => {
     }
   }
 
-  // Buscar cotação da API periodicamente
+  // Buscar cotação da API periodicamente com intervalo dinâmico
   useEffect(() => {
     fetchRates()
     
-    const interval = setInterval(fetchRates, UPDATE_INTERVAL)
+    // Intervalo dinâmico: 3s para subida, 10s para descida
+    const intervalTime = isRising ? 3000 : 10000
+    const interval = setInterval(fetchRates, intervalTime)
     
     return () => clearInterval(interval)
-  }, [])
+  }, [isRising])
 
   const formatCurrency = (value: number, decimals: number = 4): string => {
     return new Intl.NumberFormat('pt-BR', {
@@ -130,16 +140,6 @@ const USDTConverter = () => {
       
       <div className="converter-card">
         <div className="rates-grid">
-          <div className="rate-item">
-            <div className="rate-header">
-              <label>Cotação Dólar/Real</label>
-            </div>
-            <div className="rate-value">
-              {rates ? formatCurrency(rates.usdToBrl, 4) : '--'}
-            </div>
-            <div className="rate-info">Cotação atual do mercado</div>
-          </div>
-
           <div className="rate-item">
             <div className="rate-header">
               <span className="rate-icon">%</span>
