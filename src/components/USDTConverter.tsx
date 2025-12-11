@@ -154,7 +154,7 @@ const USDTConverter = () => {
 
         <div className="result-section">
           <div className="result-header">
-            <label>Valor Final</label>
+            <label>Cotação</label>
             <span className="result-badge">Com spread aplicado</span>
           </div>
           <div className="result-value-container">
