@@ -35,28 +35,56 @@ export const useUsdBrlCandles = (interval: CandleInterval = DEFAULT_INTERVAL) =>
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   /**
+   * Calcula o horário de início do candle baseado no intervalo
+   * Ex: se intervalo é 60s (1min), alinha para minutos completos (14:15:00, 14:16:00)
+   */
+  const calculateCandleStartTime = useCallback((timestamp: number): number => {
+    const date = new Date(timestamp)
+    
+    if (interval === 60) {
+      // 1 minuto: alinhar para minutos completos (14:15:00, 14:16:00)
+      date.setSeconds(0, 0)
+    } else if (interval === 300) {
+      // 5 minutos: alinhar para múltiplos de 5 (14:15:00, 14:20:00)
+      const minutes = date.getMinutes()
+      date.setMinutes(Math.floor(minutes / 5) * 5, 0, 0)
+    } else if (interval === 900) {
+      // 15 minutos: alinhar para múltiplos de 15 (14:15:00, 14:30:00)
+      const minutes = date.getMinutes()
+      date.setMinutes(Math.floor(minutes / 15) * 15, 0, 0)
+    } else if (interval === 3600) {
+      // 1 hora: alinhar para horas completas (14:00:00, 15:00:00)
+      date.setMinutes(0, 0, 0)
+    }
+    
+    return date.getTime()
+  }, [interval])
+
+  /**
    * Converte um tick em candle ou atualiza candle atual
    */
   const processTick = useCallback((bid: number, ask: number, timestamp: number) => {
     const price = (bid + ask) / 2 // Preço médio entre bid e ask
-    const candleStartTime = Math.floor(timestamp / (interval * 1000)) * (interval * 1000)
+    const candleStartTime = calculateCandleStartTime(timestamp)
 
     // Se é um novo período de candle
     if (!currentCandleRef.current || currentCandleRef.current.time !== candleStartTime) {
       // Finalizar candle anterior se existir
       if (currentCandleRef.current) {
         setCandles(prev => {
+          const candleDate = new Date(currentCandleRef.current!.time)
           const newCandles = [...prev, {
             time: currentCandleRef.current!.time,
             open: currentCandleRef.current!.open,
             high: currentCandleRef.current!.high,
             low: currentCandleRef.current!.low,
             close: currentCandleRef.current!.close,
-            date: new Date(currentCandleRef.current!.time).toLocaleString('pt-BR', {
+            date: candleDate.toLocaleString('pt-BR', {
               day: '2-digit',
               month: '2-digit',
               hour: '2-digit',
-              minute: '2-digit'
+              minute: '2-digit',
+              second: '2-digit'
             })
           }]
           
@@ -68,25 +96,25 @@ export const useUsdBrlCandles = (interval: CandleInterval = DEFAULT_INTERVAL) =>
         })
       }
 
-      // Iniciar novo candle
+      // Iniciar novo candle com o valor registrado naquele horário
       currentCandleRef.current = {
         time: candleStartTime,
-        open: price,
+        open: price, // Preço de abertura no horário exato (ex: 14:15:00)
         high: price,
         low: price,
         close: price
       }
     } else {
-      // Atualizar candle atual
+      // Atualizar candle atual (atualiza high, low e close durante o período)
       if (currentCandleRef.current) {
         currentCandleRef.current.high = Math.max(currentCandleRef.current.high, price)
         currentCandleRef.current.low = Math.min(currentCandleRef.current.low, price)
-        currentCandleRef.current.close = price
+        currentCandleRef.current.close = price // Close sempre atualiza com o último valor
       }
     }
 
     setCurrentPrice(price)
-  }, [interval])
+  }, [calculateCandleStartTime])
 
   /**
    * Busca cotação da API (reutiliza endpoint já usado no projeto)
@@ -138,13 +166,15 @@ export const useUsdBrlCandles = (interval: CandleInterval = DEFAULT_INTERVAL) =>
   const getCurrentCandle = useCallback((): CandlestickData | null => {
     if (!currentCandleRef.current) return null
 
+    const candleDate = new Date(currentCandleRef.current.time)
     return {
       ...currentCandleRef.current,
-      date: new Date(currentCandleRef.current.time).toLocaleString('pt-BR', {
+      date: candleDate.toLocaleString('pt-BR', {
         day: '2-digit',
         month: '2-digit',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        second: '2-digit'
       })
     }
   }, [])

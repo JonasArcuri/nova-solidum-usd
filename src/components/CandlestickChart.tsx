@@ -150,6 +150,17 @@ const CandlestickChart = ({ interval = 60, height = 400 }: CandlestickChartProps
             angle={-45}
             textAnchor="end"
             height={60}
+            tickFormatter={(value) => {
+              // Formatar para mostrar apenas HH:MM quando disponível
+              if (value && typeof value === 'string') {
+                const parts = value.split(', ')
+                if (parts.length > 1) {
+                  return parts[1].substring(0, 5) // Retorna apenas HH:MM
+                }
+                return value.substring(0, 5)
+              }
+              return value
+            }}
           />
           <YAxis
             stroke="#6b7280"
