@@ -32,11 +32,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const usdBrlData = await usdBrlResponse.json()
 
-    if (!usdBrlData || !usdBrlData.USDBRL || !usdBrlData.USDBRL.bid) {
+    // Verificar se a resposta é um array (a API pode retornar array)
+    const data = Array.isArray(usdBrlData) ? usdBrlData[0] : usdBrlData
+
+    if (!data || !data.USDBRL || !data.USDBRL.bid) {
       throw new Error('Formato de resposta invalido da API')
     }
 
-    const usdToBrl = parseFloat(String(usdBrlData.USDBRL.bid))
+    const usdToBrl = parseFloat(String(data.USDBRL.bid))
 
     if (isNaN(usdToBrl) || usdToBrl <= 0) {
       throw new Error('Valor de cotacao invalido')
@@ -73,6 +76,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (error) {
     console.error('Erro no proxy /api/rates:', error)
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
+    const errorStack = error instanceof Error ? error.stack : undefined
+    
+    // Log detalhado para debug no Vercel
+    console.error('Detalhes do erro:', {
+      message: errorMessage,
+      stack: errorStack,
+      type: typeof error
+    })
+    
     return res.status(500).json({ 
       error: 'Falha ao buscar cotacoes',
       message: errorMessage
