@@ -30,7 +30,11 @@ const USDTConverter = () => {
       }
 
       const data = (await response.json()) as { usdToBrl: number; usdtPrice?: number }
-      const usdToBrl = data.usdToBrl
+      const usdToBrl = parseFloat(String(data.usdToBrl)) || 0
+
+      if (!usdToBrl || isNaN(usdToBrl)) {
+        throw new Error('Valor de cotação inválido')
+      }
 
       // Detectar se está subindo ou descendo
       if (previousRate > 0) {

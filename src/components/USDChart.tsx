@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import './USDChart.css'
 
@@ -28,34 +28,44 @@ const USDChart = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null)
+  const previousRateRef = useRef<number>(0)
 
   const fetchUSDData = async () => {
     try {
       setError(null)
       
-      // Buscar cotação atual USD/BRL
-      const response = await fetch(
-        'https://economia.awesomeapi.com.br/json/last/USD-BRL'
-      )
+      // Usar API interna para evitar problemas de CORS
+      const response = await fetch('/api/rates')
       
       if (!response.ok) {
         throw new Error('Erro ao buscar cotação')
       }
       
       const data = await response.json()
-      const rate = parseFloat(data.USDBRL.bid)
-      const change = parseFloat(data.USDBRL.bid) - parseFloat(data.USDBRL.ask)
-      const changePercent = ((change / parseFloat(data.USDBRL.ask)) * 100)
+      const rate = parseFloat(data.usdToBrl) || 0
+      
+      if (!rate || isNaN(rate)) {
+        throw new Error('Valor de cotação inválido')
+      }
+      
+      // Calcular variação (usar uma pequena variação baseada na diferença com o valor anterior)
+      let change = 0
+      let changePercent = 0
+      if (previousRateRef.current > 0) {
+        change = rate - previousRateRef.current
+        changePercent = ((change / previousRateRef.current) * 100)
+      }
       
       // Detectar se está subindo ou descendo
-      if (previousRate > 0) {
-        const isRisingNow = rate >= previousRate
+      if (previousRateRef.current > 0) {
+        const isRisingNow = rate >= previousRateRef.current
         setIsRising(isRisingNow)
       }
       
-      // Calcular fechamento anterior (ask é o valor de compra, usado como referência)
-      const prevClose = parseFloat(data.USDBRL.ask)
+      // Usar o valor anterior como fechamento anterior
+      const prevClose = previousRateRef.current > 0 ? previousRateRef.current : rate
       
+      previousRateRef.current = rate
       setPreviousRate(rate)
       setPreviousClose(prevClose)
       setCurrentRate(rate)
