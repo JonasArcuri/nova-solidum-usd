@@ -22,15 +22,15 @@ const USDTConverter = () => {
     try {
       setError(null)
 
-      // Usar proxy interno para evitar problemas de CORS e unificar origem dos dados
-      const response = await fetch('/api/rates')
+      // Buscar cotação USD/BRL diretamente na AwesomeAPI (já com CORS liberado)
+      const response = await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL')
 
       if (!response.ok) {
-        throw new Error('Erro ao buscar cotações')
+        throw new Error('Erro ao buscar cotação USD/BRL')
       }
 
-      const data = (await response.json()) as { usdToBrl: number; usdtPrice?: number }
-      const usdToBrl = data.usdToBrl
+      const usdBrlData = await response.json()
+      const usdToBrl = parseFloat(usdBrlData.USDBRL.bid)
 
       // Detectar se está subindo ou descendo
       if (previousRate > 0) {
