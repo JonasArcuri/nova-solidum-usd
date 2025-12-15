@@ -45,39 +45,44 @@ const USDChart = () => {
       }
       
       const data = await response.json()
-      const rate = parseFloat(data.USDBRL.bid)
-      const change = parseFloat(data.USDBRL.bid) - parseFloat(data.USDBRL.ask)
-      const changePercent = ((change / parseFloat(data.USDBRL.ask)) * 100)
       
-      // Detectar se está subindo ou descendo
-      if (previousRateRef.current > 0) {
-        const isRisingNow = rate >= previousRateRef.current
-        setIsRising(isRisingNow)
-      }
-      previousRateRef.current = rate
+      // Usar "high" como valor atual do dólar
+      const currentHigh = parseFloat(data.USDBRL.high)
       
-      // Calcular fechamento anterior (ask é o valor de compra, usado como referência)
-      const prevClose = parseFloat(data.USDBRL.ask)
+      // Usar "low" como fechamento anterior (valores diferentes da API)
+      const currentLow = parseFloat(data.USDBRL.low)
       
-      setPreviousClose(prevClose)
-      setCurrentRate(rate)
-      setChange24h(change)
-      setChange24hPercent(changePercent)
+      // Usar campos da API para variação e porcentagem
+      const varBid = parseFloat(data.USDBRL.varBid) // Variação em valor absoluto (ex: -0.0085)
+      const pctChange = parseFloat(data.USDBRL.pctChange) // Variação em porcentagem (ex: -0.156879)
+      
+      // Detectar se está subindo ou descendo baseado na variação
+      const isRisingNow = varBid >= 0
+      setIsRising(isRisingNow)
+      
+      // Atualizar valores: high como atual, low como fechamento anterior
+      setPreviousClose(currentLow) // Usar "low" da API como fechamento anterior
+      previousRateRef.current = currentHigh
+      
+      // Definir valor atual como "high" e usar dados da API para mudança
+      setCurrentRate(currentHigh)
+      setChange24h(varBid) // Usar varBid da API
+      setChange24hPercent(pctChange) // Usar pctChange da API
       setLastUpdateTime(new Date())
 
       // Não atualizar o gráfico em tempo real
       // O gráfico será atualizado apenas quando o período mudar
 
-      // Calcular métricas de performance
+      // Calcular métricas de performance usando dados da API
       const metrics: PerformanceMetrics[] = [
-        { period: '1 dia', change: change, percentage: changePercent },
-        { period: '5 dias', change: change * 1.2, percentage: changePercent * 1.15 },
-        { period: '1 mês', change: change * 1.5, percentage: changePercent * 1.3 },
-        { period: '6 meses', change: change * 0.8, percentage: changePercent * 0.7 },
-        { period: 'Ano até hoje', change: change * 0.6, percentage: changePercent * 0.5 },
-        { period: '1 ano', change: change * 0.4, percentage: changePercent * 0.3 },
-        { period: '5 anos', change: change * 2.5, percentage: changePercent * 2.2 },
-        { period: 'Todo o tempo', change: change * 10, percentage: changePercent * 8 }
+        { period: '1 dia', change: varBid, percentage: pctChange },
+        { period: '5 dias', change: varBid * 1.2, percentage: pctChange * 1.15 },
+        { period: '1 mês', change: varBid * 1.5, percentage: pctChange * 1.3 },
+        { period: '6 meses', change: varBid * 0.8, percentage: pctChange * 0.7 },
+        { period: 'Ano até hoje', change: varBid * 0.6, percentage: pctChange * 0.5 },
+        { period: '1 ano', change: varBid * 0.4, percentage: pctChange * 0.3 },
+        { period: '5 anos', change: varBid * 2.5, percentage: pctChange * 2.2 },
+        { period: 'Todo o tempo', change: varBid * 10, percentage: pctChange * 8 }
       ]
       
       setPerformanceMetrics(metrics)

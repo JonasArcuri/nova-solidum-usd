@@ -1,0 +1,154 @@
+.live-rate-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 20px;
+}
+
+.rate-value {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
+  position: relative;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums; /* Alinhamento numérico consistente */
+}
+
+.rate-value.rising {
+  color: #10b981; /* Verde para alta */
+}
+
+.rate-value.falling {
+  color: #ef4444; /* Vermelho para baixa */
+}
+
+.rate-value.animating {
+  animation: subtle-pulse 0.8s ease-out;
+}
+
+.currency-label {
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+
+/* Indicador de pulso durante animação */
+.pulse-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.pulse-indicator.pulse-up {
+  animation: pulse-green 0.8s ease-out;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%);
+}
+
+.pulse-indicator.pulse-down {
+  animation: pulse-red 0.8s ease-out;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.1) 0%, transparent 70%);
+}
+
+/* Animações */
+@keyframes subtle-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-green {
+  0% {
+    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  50% {
+    opacity: 0.3;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.5);
+  }
+}
+
+@keyframes pulse-red {
+  0% {
+    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  50% {
+    opacity: 0.3;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.5);
+  }
+}
+
+.loading,
+.error {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
+.error {
+  color: var(--accent-red);
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .rate-value {
+    font-size: 2rem;
+  }
+
+  .currency-label {
+    font-size: 1rem;
+  }
+}
+
+/* Efeito de brilho sutil durante atualização */
+.rate-value.animating::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  animation: shimmer 0.8s ease-out;
+  pointer-events: none;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
