@@ -1,5 +1,16 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
+// Cache simples em memória (reseta a cada cold start)
+let cache: {
+  data: { usdToBrl: number; usdtPrice: number; source: string } | null
+  timestamp: number
+} = {
+  data: null,
+  timestamp: 0
+}
+
+const CACHE_DURATION = 30000 // 30 segundos de cache
+
 // Proxy para buscar cotacoes evitando erros de CORS no frontend
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS basico para todos os navegadores
@@ -15,6 +26,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
+  // Verificar cache
+  const now = Date.now()
+  if (cache.data && (now - cache.timestamp) < CACHE_DURATION) {
+    return res.status(200).json(cache.data)
+  }
+
   try {
     // Cotacao USD/BRL (AwesomeAPI - mesma fonte usada no grafico)
     const usdBrlResponse = await fetch(
@@ -26,7 +43,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     )
 
+    if (usdBrlResponse.status === 429) {
+      // Se houver cache antigo, retornar ele mesmo expirado
+      if (cache.data) {
+        console.warn('Rate limit atingido, retornando cache antigo')
+        return res.status(200).json(cache.data)
+      }
+      throw new Error('API retornou status 429 - Muitas requisicoes. Tente novamente em alguns segundos.')
+    }
+
     if (!usdBrlResponse.ok) {
+      // Se houver cache antigo e erro temporário, retornar cache
+      if (cache.data && usdBrlResponse.status >= 500) {
+        console.warn(`Erro ${usdBrlResponse.status} da API, retornando cache antigo`)
+        return res.status(200).json(cache.data)
+      }
       throw new Error(`API retornou status ${usdBrlResponse.status}`)
     }
 
@@ -68,11 +99,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.warn('Erro ao buscar USDT price:', err)
     }
 
-    return res.status(200).json({
+    const responseData = {
       usdToBrl,
       usdtPrice,
       source: 'awesomeapi+coingecko',
-    })
+    }
+
+    // Atualizar cache
+    cache.data = responseData
+    cache.timestamp = now
+
+    return res.status(200).json(responseData)
   } catch (error) {
     console.error('Erro no proxy /api/rates:', error)
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'

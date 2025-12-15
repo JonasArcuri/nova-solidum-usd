@@ -65,8 +65,8 @@ const USDTConverter = () => {
   useEffect(() => {
     fetchRates()
     
-    // Intervalo dinâmico: 3s para subida, 10s para descida
-    const intervalTime = isRising ? 3000 : 10000
+    // Intervalo aumentado para evitar rate limiting: 30s para subida, 60s para descida
+    const intervalTime = isRising ? 30000 : 60000
     const interval = setInterval(fetchRates, intervalTime)
     
     return () => clearInterval(interval)
