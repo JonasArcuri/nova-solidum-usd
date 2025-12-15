@@ -96,11 +96,16 @@ export default defineConfig({
     }
   },
   build: {
+    outDir: 'dist',
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html')
       }
-    }
-  }
+    },
+    // Garantir que a pasta api não seja incluída no build
+    emptyOutDir: true
+  },
+  // Configuração para produção no Vercel
+  publicDir: 'public'
 })
 
