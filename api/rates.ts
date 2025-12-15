@@ -11,32 +11,58 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(204).end()
   }
 
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   try {
     // Cotacao USD/BRL (AwesomeAPI - mesma fonte usada no grafico)
     const usdBrlResponse = await fetch(
       'https://economia.awesomeapi.com.br/json/last/USD-BRL',
+      {
+        headers: {
+          'Accept': 'application/json',
+        },
+      }
     )
 
     if (!usdBrlResponse.ok) {
-      throw new Error('Erro ao buscar cotacao USD/BRL')
+      throw new Error(`API retornou status ${usdBrlResponse.status}`)
     }
 
     const usdBrlData = await usdBrlResponse.json()
-    const usdToBrl = parseFloat(usdBrlData.USDBRL.bid)
+
+    if (!usdBrlData || !usdBrlData.USDBRL || !usdBrlData.USDBRL.bid) {
+      throw new Error('Formato de resposta invalido da API')
+    }
+
+    const usdToBrl = parseFloat(String(usdBrlData.USDBRL.bid))
+
+    if (isNaN(usdToBrl) || usdToBrl <= 0) {
+      throw new Error('Valor de cotacao invalido')
+    }
 
     // Cotacao USDT em USD (CoinGecko) apenas como referencia
     let usdtPrice = 1.0
     try {
       const usdtResponse = await fetch(
         'https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=usd',
+        {
+          headers: {
+            'Accept': 'application/json',
+          },
+        }
       )
 
       if (usdtResponse.ok) {
         const usdtData = await usdtResponse.json()
-        usdtPrice = usdtData.tether.usd
+        if (usdtData && usdtData.tether && usdtData.tether.usd) {
+          usdtPrice = parseFloat(String(usdtData.tether.usd)) || 1.0
+        }
       }
-    } catch {
+    } catch (err) {
       // Se falhar, mantemos usdtPrice como 1.0
+      console.warn('Erro ao buscar USDT price:', err)
     }
 
     return res.status(200).json({
@@ -46,7 +72,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })
   } catch (error) {
     console.error('Erro no proxy /api/rates:', error)
-    return res.status(500).json({ error: 'Falha ao buscar cotacoes' })
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
+    return res.status(500).json({ 
+      error: 'Falha ao buscar cotacoes',
+      message: errorMessage
+    })
   }
 }
 
