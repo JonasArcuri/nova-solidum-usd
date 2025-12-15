@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import './USDChart.css'
 
@@ -17,7 +17,7 @@ type PeriodType = '1 dia' | '5 dias' | '1 mês' | '6 meses' | 'Ano até hoje' | 
 
 const USDChart = () => {
   const [currentRate, setCurrentRate] = useState<number>(0)
-  const [previousRate, setPreviousRate] = useState<number>(0)
+  const previousRateRef = useRef<number>(0)
   const [previousClose, setPreviousClose] = useState<number>(0)
   const [isRising, setIsRising] = useState<boolean>(true)
   const [change24h, setChange24h] = useState<number>(0)
@@ -28,8 +28,10 @@ const USDChart = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const chartInitializedRef = useRef<boolean>(false)
 
-  const fetchUSDData = async () => {
+  const fetchUSDData = useCallback(async () => {
     try {
       setError(null)
       
@@ -48,20 +50,23 @@ const USDChart = () => {
       const changePercent = ((change / parseFloat(data.USDBRL.ask)) * 100)
       
       // Detectar se está subindo ou descendo
-      if (previousRate > 0) {
-        const isRisingNow = rate >= previousRate
+      if (previousRateRef.current > 0) {
+        const isRisingNow = rate >= previousRateRef.current
         setIsRising(isRisingNow)
       }
+      previousRateRef.current = rate
       
       // Calcular fechamento anterior (ask é o valor de compra, usado como referência)
       const prevClose = parseFloat(data.USDBRL.ask)
       
-      setPreviousRate(rate)
       setPreviousClose(prevClose)
       setCurrentRate(rate)
       setChange24h(change)
       setChange24hPercent(changePercent)
       setLastUpdateTime(new Date())
+
+      // Não atualizar o gráfico em tempo real
+      // O gráfico será atualizado apenas quando o período mudar
 
       // Calcular métricas de performance
       const metrics: PerformanceMetrics[] = [
@@ -81,9 +86,9 @@ const USDChart = () => {
       setError(err instanceof Error ? err.message : 'Erro ao buscar dados')
       setLoading(false)
     }
-  }
+  }, [])
 
-  const generateChartData = (baseRate: number, period: PeriodType) => {
+  const generateHistoricalData = (baseRate: number, period: PeriodType): ChartData[] => {
     const historicalData: ChartData[] = []
     let days = 0
     
@@ -142,49 +147,83 @@ const USDChart = () => {
         })
       }
     } else {
+      // Para períodos maiores, gerar dados históricos do passado até o presente
       const dataPoints = Math.min(days, 100) // Limitar a 100 pontos para performance
       const step = Math.max(1, Math.floor(days / dataPoints))
+      const now = new Date()
       
+      // Começar do passado e ir até o presente
       for (let i = days; i >= 0; i -= step) {
-        const date = new Date()
+        const date = new Date(now)
         date.setDate(date.getDate() - i)
         
         let dateStr = ''
-        if (days <= 30) {
+        if (days <= 7) {
+          // Para 5 dias, mostrar dia e hora
+          dateStr = date.toLocaleDateString('pt-BR', { 
+            day: '2-digit', 
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        } else if (days <= 30) {
+          // Para 1 mês, mostrar dia e mês
           dateStr = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
         } else if (days <= 365) {
+          // Para 6 meses e 1 ano, mostrar mês e ano
           dateStr = date.toLocaleDateString('pt-BR', { month: '2-digit', year: '2-digit' })
         } else {
+          // Para períodos maiores, mostrar mês e ano completo
           dateStr = date.toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' })
         }
         
-        // Simular variação histórica baseada na distância temporal
-        const variation = (Math.random() - 0.5) * 0.15 * (i / days) // Variação maior no passado
-        const historicalRate = baseRate * (1 + variation)
+        // Simular variação histórica mais realista
+        // Variação menor quando mais próximo do presente
+        const timeProgress = (days - i) / days // 0 no passado, 1 no presente
+        const baseVariation = 0.10 // Variação base de 10%
+        const variation = (Math.random() - 0.5) * baseVariation * (1 - timeProgress * 0.7)
+        
+        // Garantir que o último ponto seja próximo ao valor atual
+        const historicalRate = i === 0 
+          ? baseRate // Último ponto = valor atual
+          : baseRate * (1 + variation)
         
         historicalData.push({
           date: dateStr,
           value: parseFloat(historicalRate.toFixed(4))
         })
       }
+      
+      // Garantir que o último ponto seja exatamente o valor atual
+      if (historicalData.length > 0) {
+        historicalData[historicalData.length - 1].value = parseFloat(baseRate.toFixed(4))
+      }
     }
     
-    setChartData(historicalData)
+    return historicalData
   }
 
   useEffect(() => {
+    // Buscar dados imediatamente ao montar
     fetchUSDData()
     
-    // Intervalo dinâmico: 3s para subida, 10s para descida
-    const intervalTime = isRising ? 3000 : 10000
-    const interval = setInterval(fetchUSDData, intervalTime)
+    // Atualizar valores no topo em tempo real a cada 1000ms (1 segundo)
+    intervalRef.current = setInterval(fetchUSDData, 1000)
     
-    return () => clearInterval(interval)
-  }, [isRising])
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
+    }
+  }, [fetchUSDData])
 
+  // Quando o período mudar, regenerar dados históricos correspondentes ao período
   useEffect(() => {
     if (currentRate > 0) {
-      generateChartData(currentRate, selectedPeriod)
+      // Gerar dados históricos para o período selecionado
+      const historicalData = generateHistoricalData(currentRate, selectedPeriod)
+      setChartData(historicalData)
+      chartInitializedRef.current = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPeriod, currentRate])

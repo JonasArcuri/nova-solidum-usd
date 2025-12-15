@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import './USDTConverter.css'
 
 interface ExchangeRates {
@@ -11,14 +11,19 @@ const DEFAULT_SPREAD = 0.70 // 0.70% de spread padrão
 
 const USDTConverter = () => {
   const [rates, setRates] = useState<ExchangeRates | null>(null)
-  const [previousRate, setPreviousRate] = useState<number>(0)
-  const [isRising, setIsRising] = useState<boolean>(true)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [spread, setSpread] = useState<number>(DEFAULT_SPREAD)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const spreadRef = useRef<number>(DEFAULT_SPREAD)
 
-  const fetchRates = async () => {
+  // Atualizar ref quando spread mudar
+  useEffect(() => {
+    spreadRef.current = spread
+  }, [spread])
+
+  const fetchRates = useCallback(async () => {
     try {
       setError(null)
 
@@ -32,21 +37,15 @@ const USDTConverter = () => {
       const usdBrlData = await response.json()
       const usdToBrl = parseFloat(usdBrlData.USDBRL.bid)
 
-      // Detectar se está subindo ou descendo
-      if (previousRate > 0) {
-        const isRisingNow = usdToBrl >= previousRate
-        setIsRising(isRisingNow)
-      }
-      setPreviousRate(usdToBrl)
-
-      // Calcular spread com valor do estado (sobre o USD/BRL)
-      const spreadMultiplier = 1 + (spread / 100)
+      // Calcular spread com valor atual do ref (sempre atualizado)
+      const currentSpread = spreadRef.current
+      const spreadMultiplier = 1 + (currentSpread / 100)
       const usdtWithSpread = usdToBrl * spreadMultiplier
 
       setRates({
         usdToBrl,
         usdtWithSpread,
-        spread,
+        spread: currentSpread,
       })
 
       setLastUpdate(new Date())
@@ -55,18 +54,22 @@ const USDTConverter = () => {
       setError(err instanceof Error ? err.message : 'Erro ao buscar dados')
       setLoading(false)
     }
-  }
+  }, [])
 
-  // Buscar cotação da API periodicamente com intervalo dinâmico
+  // Buscar cotação da API em tempo real (atualização contínua a cada 1 segundo)
   useEffect(() => {
+    // Buscar imediatamente ao montar
     fetchRates()
     
-    // Intervalo dinâmico: 3s para subida, 10s para descida
-    const intervalTime = isRising ? 3000 : 10000
-    const interval = setInterval(fetchRates, intervalTime)
+    // Intervalo de 1000ms (1 segundo) para atualização em tempo real
+    intervalRef.current = setInterval(fetchRates, 1000)
     
-    return () => clearInterval(interval)
-  }, [isRising])
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
+    }
+  }, [fetchRates])
 
   const formatCurrency = (value: number, decimals: number = 4): string => {
     return new Intl.NumberFormat('pt-BR', {
@@ -77,7 +80,7 @@ const USDTConverter = () => {
     }).format(value)
   }
 
-  // Recalcular USDT com spread quando o spread mudar
+  // Recalcular USDT com spread quando o spread mudar (atualização imediata)
   useEffect(() => {
     if (rates && rates.usdToBrl) {
       const spreadMultiplier = 1 + (spread / 100)
@@ -92,8 +95,7 @@ const USDTConverter = () => {
         }
       })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spread])
+  }, [spread, rates?.usdToBrl])
 
   if (loading && !rates) {
     return (
