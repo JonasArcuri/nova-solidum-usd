@@ -25,6 +25,17 @@ const USDTConverter = () => {
       // Usar proxy interno para evitar problemas de CORS e unificar origem dos dados
       const response = await fetch('/api/rates')
 
+      // Tratar erro 429 (rate limit)
+      if (response.status === 429) {
+        const errorData = await response.json().catch(() => ({}))
+        const retryAfter = errorData.retryAfter || 60
+        console.warn(`Rate limit atingido. Aguardando ${retryAfter} segundos...`)
+        // Aguardar antes de tentar novamente
+        await new Promise(resolve => setTimeout(resolve, retryAfter * 1000))
+        // Tentar novamente após o delay
+        return fetchRates()
+      }
+
       if (!response.ok) {
         throw new Error('Erro ao buscar cotações')
       }
@@ -65,12 +76,12 @@ const USDTConverter = () => {
   useEffect(() => {
     fetchRates()
     
-    // Intervalo aumentado para evitar rate limiting: 30s para subida, 60s para descida
-    const intervalTime = isRising ? 30000 : 60000
+    // Intervalo aumentado para evitar rate limiting: 60s mínimo
+    const intervalTime = 60000 // 1 minuto
     const interval = setInterval(fetchRates, intervalTime)
     
     return () => clearInterval(interval)
-  }, [isRising])
+  }, [])
 
   const formatCurrency = (value: number, decimals: number = 4): string => {
     return new Intl.NumberFormat('pt-BR', {

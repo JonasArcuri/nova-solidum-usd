@@ -9,7 +9,8 @@ let cache: {
   timestamp: 0
 }
 
-const CACHE_DURATION = 30000 // 30 segundos de cache
+const CACHE_DURATION = 60000 // 60 segundos de cache (1 minuto)
+const CACHE_FALLBACK_DURATION = 300000 // 5 minutos para cache de fallback em caso de erro
 
 // Proxy para buscar cotacoes evitando erros de CORS no frontend
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -28,9 +29,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Verificar cache
   const now = Date.now()
-  if (cache.data && (now - cache.timestamp) < CACHE_DURATION) {
+  const cacheAge = now - cache.timestamp
+  
+  // Retornar cache válido (menos de 1 minuto)
+  if (cache.data && cacheAge < CACHE_DURATION) {
     return res.status(200).json(cache.data)
   }
+  
+  // Se cache expirou mas ainda é recente (menos de 5 minutos), usar como fallback se houver erro
+  const useCacheAsFallback = cache.data && cacheAge < CACHE_FALLBACK_DURATION
 
   try {
     // Cotacao USD/BRL (AwesomeAPI - mesma fonte usada no grafico)
@@ -44,17 +51,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     )
 
     if (usdBrlResponse.status === 429) {
-      // Se houver cache antigo, retornar ele mesmo expirado
-      if (cache.data) {
-        console.warn('Rate limit atingido, retornando cache antigo')
+      // Se houver cache disponível (mesmo expirado), retornar ele
+      if (useCacheAsFallback) {
+        console.warn('Rate limit 429 atingido, retornando cache antigo')
         return res.status(200).json(cache.data)
       }
-      throw new Error('API retornou status 429 - Muitas requisicoes. Tente novamente em alguns segundos.')
+      // Se não houver cache, retornar erro mas com status 429 para o cliente tratar
+      return res.status(429).json({ 
+        error: 'Rate limit atingido',
+        message: 'Muitas requisicoes. Tente novamente em alguns segundos.',
+        retryAfter: 60
+      })
     }
 
     if (!usdBrlResponse.ok) {
-      // Se houver cache antigo e erro temporário, retornar cache
-      if (cache.data && usdBrlResponse.status >= 500) {
+      // Se houver cache disponível e erro temporário, retornar cache
+      if (useCacheAsFallback && usdBrlResponse.status >= 500) {
         console.warn(`Erro ${usdBrlResponse.status} da API, retornando cache antigo`)
         return res.status(200).json(cache.data)
       }
