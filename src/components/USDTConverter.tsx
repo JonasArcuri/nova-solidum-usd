@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import './USDTConverter.css'
 
 interface ExchangeRates {
-  usdtPrice: number
   usdToBrl: number
   usdtWithSpread: number
   spread: number
@@ -22,18 +21,16 @@ const USDTConverter = () => {
   const fetchRates = async () => {
     try {
       setError(null)
-      
-      // Buscar cotação USD/BRL usando API de câmbio
-      const usdBrlResponse = await fetch(
-        'https://economia.awesomeapi.com.br/json/last/USD-BRL'
-      )
-      
-      if (!usdBrlResponse.ok) {
-        throw new Error('Erro ao buscar cotação USD/BRL')
+
+      // Usar proxy interno para evitar problemas de CORS e unificar origem dos dados
+      const response = await fetch('/api/rates')
+
+      if (!response.ok) {
+        throw new Error('Erro ao buscar cotações')
       }
-      
-      const usdBrlData = await usdBrlResponse.json()
-      const usdToBrl = parseFloat(usdBrlData.USDBRL.bid)
+
+      const data = (await response.json()) as { usdToBrl: number; usdtPrice?: number }
+      const usdToBrl = data.usdToBrl
 
       // Detectar se está subindo ou descendo
       if (previousRate > 0) {
@@ -42,28 +39,16 @@ const USDTConverter = () => {
       }
       setPreviousRate(usdToBrl)
 
-      // Buscar preço do USDT em USD (CoinGecko) para referência
-      const usdtResponse = await fetch(
-        'https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=usd'
-      )
-      
-      let usdtPrice = 1.0
-      if (usdtResponse.ok) {
-        const usdtData = await usdtResponse.json()
-        usdtPrice = usdtData.tether.usd
-      }
-
-      // Calcular spread com valor do estado
+      // Calcular spread com valor do estado (sobre o USD/BRL)
       const spreadMultiplier = 1 + (spread / 100)
       const usdtWithSpread = usdToBrl * spreadMultiplier
 
       setRates({
-        usdtPrice,
         usdToBrl,
         usdtWithSpread,
-        spread
+        spread,
       })
-      
+
       setLastUpdate(new Date())
       setLoading(false)
     } catch (err) {
